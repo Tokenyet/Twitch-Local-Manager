@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Dark Chat Script
+// @name         Twitch Local Manager
 // @namespace    http://tampermonkey.net/
 // @version      0.1
 // @description  Protect your eyes from seeing chat name who using hurt-eye color.
@@ -15,20 +15,55 @@
 
 (function() {
     'use strict';
+    //=== Custom Parameter Start ===
+    var FONT_SIZE = 14;
+    var ENABLE_CHINESE_NAME = 1; // 1 on 2 off
+    var ENABLE_FONT_SIZE = 2; //1 on, 2 off
+    var ENABLE_EYE_CORRECTION = 1; //1 on, 2 off
+    //=== Custom Parameter End ===
     function hookChat() {
         $('.chat-lines').bind("DOMSubtreeModified",function(e){
             var chatobject = $(e.target);
             var chatChildList = chatobject.children('li');
             var lastChild = chatChildList.last();
-            var fromInfoOfChild = lastChild.children(".from");
-            var color = "black";
-            var rgbString = lastChild.children(".from").css("color");
-            var rgbArray = parseRGB(rgbString);
-            hurtEyeCorrection(rgbArray); // call by ref, when variable is object.
-            rgbString = stringRGB(rgbArray);
-            fromInfoOfChild.css("color", rgbString);
+            if(ENABLE_EYE_CORRECTION == 1)
+                userCustomFontColor(lastChild);
+            if(ENABLE_FONT_SIZE == 1)
+                userCustomFontSize(lastChild, FONT_SIZE);
+            if(ENABLE_CHINESE_NAME == 2)
+                userCustomEliminateChinese(lastChild);
             //fromInfoOfChild.css("color", color ); // directly make chat be black font display.
         });
+    }
+    function userCustomEliminateChinese(object) {
+        var lastChild = object;
+        var fromInfoOfChild = lastChild.children(".from");
+        var englishObject = fromInfoOfChild.children(".intl-login");
+        if(englishObject === null || englishObject === undefined || englishObject.length === 0 )
+            return;
+        var englishNameWithColon = englishObject.html();
+        //console.log(englishNameWithColon);.replace("(","").replace(")","");
+        var englishName = englishNameWithColon.replace("(","").replace(")","");
+        fromInfoOfChild.html(englishName);
+    }
+    function userCustomFontSize(object, size) {
+        var fontsize = size;
+        var lastChild = object;
+        var fromInfoOfChild = lastChild.children(".from");
+        var colnChild = lastChild.children(".colon");
+        var msgChild = lastChild.children(".message");
+        fromInfoOfChild.css({ 'font-size': fontsize });
+        colnChild.css({ 'font-size': fontsize });
+        msgChild.css({ 'font-size': fontsize });  
+    }
+    function userCustomFontColor(object) {
+        var lastChild = object;
+        var fromInfoOfChild = lastChild.children(".from");
+        var rgbString = lastChild.children(".from").css("color");
+        var rgbArray = parseRGB(rgbString);
+        hurtEyeCorrection(rgbArray); // call by ref, when variable is object.
+        rgbString = stringRGB(rgbArray);
+        fromInfoOfChild.css("color", rgbString);
     }
 
     function parseRGB(string) {
@@ -44,8 +79,8 @@
     function hurtEyeCorrection(array) {
         var arrayLength = array.length;
         for (var i = 0; i < arrayLength; i++) {
-            if(array[i] > 100)
-               array[i] -= 100;
+            if(array[i] > 125)
+               array[i] -= 125;
         }
         return array;
     }
