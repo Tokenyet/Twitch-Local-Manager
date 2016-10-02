@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Twitch Local Manager
 // @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      1.0
 // @description  Protect your eyes from seeing chat name who using hurt-eye color.
 // @author       Tokenyet (or Dowen)
 // @supportURL   tokenyete@gmail.com
@@ -12,14 +12,15 @@
 // @require      https://gist.githubusercontent.com/PizzaBrandon/5709010/raw/e539a6f16c10465eb948b9ef6b0fe1d4c17a7c3e/jquery.waituntilexists.js
 /* Thanks to the waituntilexists script from https://gist.github.com/BrockA*/
 // ==/UserScript==
-
+var dictionary = {};
 (function() {
     'use strict';
     //=== Custom Parameter Start ===
     var FONT_SIZE = 14;
     var ENABLE_CHINESE_NAME = 1; // 1 on 2 off
-    var ENABLE_FONT_SIZE = 2; //1 on, 2 off
+    var ENABLE_FONT_SIZE = 1; //1 on, 2 off
     var ENABLE_EYE_CORRECTION = 1; //1 on, 2 off
+    var ENABLE_MSG_PREVENT_DELETE = 1;
     //=== Custom Parameter End ===
     function hookChat() {
         $('.chat-lines').bind("DOMSubtreeModified",function(e){
@@ -32,6 +33,8 @@
                 userCustomFontSize(lastChild, FONT_SIZE);
             if(ENABLE_CHINESE_NAME == 2)
                 userCustomEliminateChinese(lastChild);
+            if(ENABLE_MSG_PREVENT_DELETE == 1)
+                processChatDetails(chatChildList);
             //fromInfoOfChild.css("color", color ); // directly make chat be black font display.
         });
     }
@@ -54,7 +57,7 @@
         var msgChild = lastChild.children(".message");
         fromInfoOfChild.css({ 'font-size': fontsize });
         colnChild.css({ 'font-size': fontsize });
-        msgChild.css({ 'font-size': fontsize });  
+        msgChild.css({ 'font-size': fontsize });
     }
     function userCustomFontColor(object) {
         var lastChild = object;
@@ -64,6 +67,18 @@
         hurtEyeCorrection(rgbArray); // call by ref, when variable is object.
         rgbString = stringRGB(rgbArray);
         fromInfoOfChild.css("color", rgbString);
+    }
+
+    function processChatDetails(chatList) {
+        for(var i = 0; i < chatList.length; i++){
+            var chat = chatList[i];
+            var msg = $(chat).children(".message");
+            var del = $(chat).children(".deleted");
+            if(dictionary[chat.id] === undefined)
+                dictionary[chat.id] = msg.text();
+            else if(del !== undefined)
+                del.text(dictionary[chat.id] + "[-deleted-]");
+        }
     }
 
     function parseRGB(string) {
@@ -88,6 +103,7 @@
     function waitUntilExists(str, func) {
         $(str).waitUntilExists(func);
     }
+
     var elementName = ".chat-lines";
     waitUntilExists(elementName, function() { hookChat(); } );
 })();
