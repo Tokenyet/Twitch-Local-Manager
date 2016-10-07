@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Twitch Local Manager
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      0.1
 // @description  Protect your eyes from seeing chat name who using hurt-eye color.
 // @author       Tokenyet (or Dowen)
 // @supportURL   tokenyete@gmail.com
@@ -13,6 +13,7 @@
 /* Thanks to the waituntilexists script from https://gist.github.com/BrockA*/
 // ==/UserScript==
 var dictionary = {};
+var time = new Date();
 (function() {
     'use strict';
     //=== Custom Parameter Start ===
@@ -75,10 +76,28 @@ var dictionary = {};
             var msg = $(chat).children(".message");
             var del = $(chat).children(".deleted");
             if(dictionary[chat.id] === undefined)
-                dictionary[chat.id] = msg.text();
+            {
+                var timeStamp = time.getElapsed();
+                var text = msg.text();
+                var object = {time: timeStamp, text: text};
+                dictionary[chat.id] = object;
+            }
             else if(del !== undefined)
-                del.text(dictionary[chat.id] + "[-deleted-]");
+                del.text(dictionary[chat.id].text + "[-deleted-]");
         }
+        reduceChats();
+    }
+
+    function reduceChats()
+    {
+        var removeKeyLists;
+        var currentTime= time.getElapsed();
+        for (var key in dictionary)
+            if(currentTime - dictionary[key].time > 120000)
+                removeKeyLists.push(key);
+
+        for(var element in removeKeyLists)
+            delete dictionary[element];
     }
 
     function parseRGB(string) {
