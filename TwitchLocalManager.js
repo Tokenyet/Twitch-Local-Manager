@@ -90,7 +90,7 @@ var time = new Date();
 
     function reduceChats()
     {
-        var removeKeyLists;
+        var removeKeyLists = [];
         var currentTime= time.getElapsed();
         for (var key in dictionary)
             if(currentTime - dictionary[key].time > 120000)
